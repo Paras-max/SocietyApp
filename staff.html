@@ -1,0 +1,160 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-6">
+        <h1 class="fw-bold text-dark mb-1">Staff Management 🛡️</h1>
+        <p class="text-muted">Manage security, maintenance, and cleaning personnel.</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <button class="btn btn-primary shadow-sm rounded-4 px-4 py-3" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+            <i class="fa-solid fa-plus me-2"></i> Register New Staff
+        </button>
+    </div>
+</div>
+
+<div class="glass-card bg-white shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="table-responsive p-4">
+        <table class="table align-middle">
+            <thead>
+                <tr class="text-muted small fw-bold text-uppercase">
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Contact</th>
+                    <th>Salary</th>
+                    <th>Shift</th>
+                    <th>Join Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if staff %}
+                    {% for member in staff %}
+                    <tr>
+                        <td class="fw-bold text-dark">{{ member.name }}</td>
+                        <td><span class="badge bg-light text-dark border p-2">{{ member.role }}</span></td>
+                        <td>{{ member.phone }}</td>
+                        <td class="fw-bold text-success">₹{{ member.salary }}</td>
+                        <td>{{ member.shift }}</td>
+                        <td><small>{{ member.join_date }}</small></td>
+                        <td>
+                            <span class="badge {% if member.status == 'Active' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} rounded-3 p-2 small fw-bold">
+                                {{ member.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-light btn-sm rounded-3 border px-3" onclick="editStaff({{ member | tojson }})">Edit</button>
+                                <form action="{{ url_for('staff_action') }}" method="POST" onsubmit="return confirm('Remove this staff member?')">
+                                    <input type="hidden" name="id" value="{{ member.id }}">
+                                    <input type="hidden" name="action" value="delete">
+                                    <button class="btn btn-light btn-sm rounded-3 border text-danger px-3">Fire</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">No staff members registered.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Staff Modal -->
+<div class="modal fade" id="addStaffModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold" id="staffModalTitle">Register Staff</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('staff_action') }}" method="POST">
+                <input type="hidden" name="id" id="staffId">
+                <input type="hidden" name="action" id="staffModalAction" value="add">
+                <div class="modal-body p-4 pt-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Staff Name</label>
+                            <input type="text" name="name" id="staffName" class="form-control rounded-3" placeholder="David Miller" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Role</label>
+                            <select name="role" id="staffRole" class="form-select rounded-3" required>
+                                <option value="Manager">Manager</option>
+                                <option value="Security Guard">Security Guard</option>
+                                <option value="Plumber">Plumber</option>
+                                <option value="Electrician">Electrician</option>
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="Housekeeping">Housekeeping</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Phone Number</label>
+                            <input type="text" name="phone" id="staffPhone" class="form-control rounded-3" placeholder="+91 88888 77777" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Monthly Salary</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted">₹</span>
+                                <input type="number" name="salary" id="staffSalary" class="form-control rounded-3 border-start-0" placeholder="15000" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Shift Timing</label>
+                            <select name="shift" id="staffShift" class="form-select rounded-3">
+                                <option value="Day">Day</option>
+                                <option value="Night">Night</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Join Date</label>
+                            <input type="date" name="join_date" id="staffJoinDate" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Employment Status</label>
+                            <select name="status" id="staffStatus" class="form-select rounded-3">
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 shadow-sm">Save Details</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editStaff(member) {
+    document.getElementById('staffModalTitle').innerText = 'Edit Staff Member';
+    document.getElementById('staffModalAction').value = 'edit';
+    document.getElementById('staffId').value = member.id;
+    document.getElementById('staffName').value = member.name;
+    document.getElementById('staffRole').value = member.role;
+    document.getElementById('staffPhone').value = member.phone;
+    document.getElementById('staffSalary').value = member.salary;
+    document.getElementById('staffShift').value = member.shift;
+    document.getElementById('staffJoinDate').value = member.join_date;
+    document.getElementById('staffStatus').value = member.status;
+    
+    new bootstrap.Modal(document.getElementById('addStaffModal')).show();
+}
+
+// Reset modal when closed
+document.getElementById('addStaffModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('staffModalTitle').innerText = 'Register Staff';
+    document.getElementById('staffModalAction').value = 'add';
+    document.getElementById('staffId').value = '';
+    document.querySelector('form').reset();
+});
+</script>
+{% endblock %}

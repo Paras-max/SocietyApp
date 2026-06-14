@@ -1,0 +1,201 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-6">
+        <h1 class="fw-bold text-dark mb-1">Welcome, {{ session.get('username') }}! 👋</h1>
+        <p class="text-muted">Here's what's happening in your society today.</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <div class="bg-white px-3 py-2 rounded-4 shadow-sm border-0 d-inline-block">
+            <span class="text-muted small"><i class="fa-regular fa-calendar-days me-1"></i> {{ current_date }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Stats row -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="stat-card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+            <div class="d-flex align-items-start justify-content-between">
+                <div>
+                    <p class="text-muted small fw-bold mb-1">TOTAL RESIDENTS</p>
+                    <h3 class="fw-bold mb-0">{{ stats.residents }}</h3>
+                </div>
+                <div class="stat-icon bg-primary-subtle text-primary rounded-3 p-3">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+            <div class="mt-3">
+                <span class="text-success small fw-bold"><i class="fa-solid fa-arrow-up me-1"></i> +2 this month</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+            <div class="d-flex align-items-start justify-content-between">
+                <div>
+                    <p class="text-muted small fw-bold mb-1">OPEN COMPLAINTS</p>
+                    <h3 class="fw-bold mb-0 text-danger">{{ stats.complaints }}</h3>
+                </div>
+                <div class="stat-icon bg-danger-subtle text-danger rounded-3 p-3">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+            </div>
+            <div class="mt-3">
+                <a href="{{ url_for('complaints') }}" class="small text-decoration-none">View all <i
+                        class="fa-solid fa-chevron-right ms-1 small"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+            <div class="d-flex align-items-start justify-content-between">
+                <div>
+                    <p class="text-muted small fw-bold mb-1">TOTAL STAFF</p>
+                    <h3 class="fw-bold mb-0">{{ stats.staff }}</h3>
+                </div>
+                <div class="stat-icon bg-warning-subtle text-warning rounded-3 p-3">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+            </div>
+            <div class="mt-3">
+                <span class="text-muted small fw-bold">Active in society</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+            <div class="d-flex align-items-start justify-content-between">
+                <div>
+                    <p class="text-muted small fw-bold mb-1">VISITORS TODAY</p>
+                    <h3 class="fw-bold mb-0">{{ stats.visitors }}</h3>
+                </div>
+                <div class="stat-icon bg-info-subtle text-info rounded-3 p-3">
+                    <i class="fa-solid fa-id-badge"></i>
+                </div>
+            </div>
+            <div class="mt-3">
+                <span class="text-info small fw-bold">Daily entries tracked</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Notice Board Section -->
+    <div class="col-md-8">
+        <div class="glass-card shadow-sm h-100 bg-white border-0 rounded-4 overflow-hidden">
+            <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+                <h5 class="fw-bold mb-0">Notice Board</h5>
+                <a href="{{ url_for('notices') }}" class="btn btn-sm btn-light border rounded-3 px-3">See All</a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% if recent_notices %}
+                {% for notice in recent_notices %}
+                <div class="list-group-item border-0 p-4 hover-bg">
+                    <div class="d-flex gap-3">
+                        <div class="notice-icon text-white rounded-3 d-flex align-items-center justify-content-center p-3"
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fa-solid fa-bullhorn"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <h6 class="fw-bold mb-0">{{ notice.title }}</h6>
+                                <span class="small text-muted">{{ notice.posted_date }}</span>
+                            </div>
+                            <p class="small text-muted mb-0">{{ notice.content[:100] }}...</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="p-5 text-center text-muted">
+                    <i class="fa-solid fa-calendar-xmark fa-3x mb-3 opacity-25"></i>
+                    <p>No notices posted yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="glass-card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+            <div class="p-4 border-bottom">
+                <h5 class="fw-bold mb-0">Quick Actions</h5>
+            </div>
+            <div class="p-4">
+                {% if session.get('role') == 'Admin' %}
+                <button class="btn btn-primary w-100 mb-3 py-3 rounded-4" data-bs-toggle="modal"
+                    data-bs-target="#newNoticeModal">
+                    <i class="fa-solid fa-plus me-2"></i> Post New Notice
+                </button>
+                <a href="{{ url_for('residents') }}" class="btn btn-outline-dark w-100 mb-3 py-3 rounded-4">
+                    <i class="fa-solid fa-user-plus me-2"></i> Add Resident
+                </a>
+                {% endif %}
+
+                {% if session.get('role') == 'Security' %}
+                <a href="{{ url_for('visitors') }}" class="btn btn-primary w-100 mb-3 py-3 rounded-4">
+                    <i class="fa-solid fa-user-plus me-2"></i> New Visitor Entry
+                </a>
+                {% endif %}
+
+                {% if session.get('role') == 'Resident' %}
+                <a href="{{ url_for('complaints') }}" class="btn btn-danger w-100 mb-3 py-3 rounded-4">
+                    <i class="fa-solid fa-bug me-2"></i> File Complaint
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-bg:hover {
+        background: #f8fafc;
+    }
+
+    .notice-icon {
+        width: 45px;
+        height: 45px;
+        flex-shrink: 0;
+    }
+</style>
+
+<!-- New Notice Modal (Simple placeholder for dashboard interaction) -->
+<div class="modal fade" id="newNoticeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Post New Notice</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('notices_action') }}" method="POST">
+                <div class="modal-body pt-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Notice Title</label>
+                        <input type="text" name="title" class="form-control rounded-3" placeholder="Enter notice title"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Content</label>
+                        <textarea name="content" class="form-control rounded-3" rows="4"
+                            placeholder="Enter notice details..." required></textarea>
+                    </div>
+                    <input type="hidden" name="action" value="add">
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4">Post Notice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

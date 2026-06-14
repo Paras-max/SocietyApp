@@ -1,0 +1,146 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-6">
+        <h1 class="fw-bold text-dark mb-1">Resident Management 🏠</h1>
+        <p class="text-muted">Manage all flat owners and tenants in the society.</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <button class="btn btn-primary shadow-sm rounded-4 px-4 py-3" data-bs-toggle="modal" data-bs-target="#addResidentModal">
+            <i class="fa-solid fa-plus me-2"></i> Add New Resident
+        </button>
+    </div>
+</div>
+
+<div class="glass-card bg-white shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="table-responsive p-4">
+        <table class="table align-middle">
+            <thead>
+                <tr class="text-muted small fw-bold text-uppercase">
+                    <th>Flat No</th>
+                    <th>Name</th>
+                    <th>Contact</th>
+                    <th>Type</th>
+                    <th>Members</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if residents %}
+                    {% for resident in residents %}
+                    <tr>
+                        <td class="fw-bold"><span class="badge bg-light text-dark border p-2">{{ resident.flat_no }}</span></td>
+                        <td>{{ resident.name }}</td>
+                        <td>
+                            <div class="small fw-semibold">{{ resident.phone }}</div>
+                            <div class="small text-muted">{{ resident.email }}</div>
+                        </td>
+                        <td>
+                            <span class="badge {% if resident.owner_or_tenant == 'Owner' %}bg-primary-subtle text-primary{% else %}bg-info-subtle text-info{% endif %} rounded-3 p-2 small fw-bold">
+                                {{ resident.owner_or_tenant }}
+                            </span>
+                        </td>
+                        <td>{{ resident.members }} members</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-light btn-sm rounded-3 border px-3" onclick="editResident({{ resident | tojson }})">Edit</button>
+                                <form action="{{ url_for('residents_action') }}" method="POST" onsubmit="return confirm('Delete this resident?')">
+                                    <input type="hidden" name="id" value="{{ resident.id }}">
+                                    <input type="hidden" name="action" value="delete">
+                                    <button class="btn btn-light btn-sm rounded-3 border text-danger px-3">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">No residents found.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Resident Modal -->
+<div class="modal fade" id="addResidentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold" id="modalTitle">Add New Resident</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('residents_action') }}" method="POST">
+                <input type="hidden" name="id" id="residentId">
+                <input type="hidden" name="action" id="modalAction" value="add">
+                <div class="modal-body p-4 pt-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Full Name</label>
+                            <input type="text" name="name" id="resName" class="form-control rounded-3" placeholder="John Doe" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Flat Number</label>
+                            <input type="text" name="flat_no" id="resFlat" class="form-control rounded-3" placeholder="A-101" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Phone Number</label>
+                            <input type="text" name="phone" id="resPhone" class="form-control rounded-3" placeholder="+91 98765 43210" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Email Address</label>
+                            <input type="email" name="email" id="resEmail" class="form-control rounded-3" placeholder="john@example.com" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Owner or Tenant</label>
+                            <select name="owner_or_tenant" id="resType" class="form-select rounded-3">
+                                <option value="Owner">Owner</option>
+                                <option value="Tenant">Tenant</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Members</label>
+                            <input type="number" name="members" id="resMembers" class="form-control rounded-3" value="1" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Move-in Date</label>
+                            <input type="date" name="move_in_date" id="resDate" class="form-control rounded-3" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 shadow-sm">Save Resident</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editResident(resident) {
+    document.getElementById('modalTitle').innerText = 'Edit Resident';
+    document.getElementById('modalAction').value = 'edit';
+    document.getElementById('residentId').value = resident.id;
+    document.getElementById('resName').value = resident.name;
+    document.getElementById('resFlat').value = resident.flat_no;
+    document.getElementById('resPhone').value = resident.phone;
+    document.getElementById('resEmail').value = resident.email;
+    document.getElementById('resType').value = resident.owner_or_tenant;
+    document.getElementById('resMembers').value = resident.members;
+    document.getElementById('resDate').value = resident.move_in_date;
+    
+    new bootstrap.Modal(document.getElementById('addResidentModal')).show();
+}
+
+// Reset modal when closed
+document.getElementById('addResidentModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('modalTitle').innerText = 'Add New Resident';
+    document.getElementById('modalAction').value = 'add';
+    document.getElementById('residentId').value = '';
+    document.querySelector('form').reset();
+});
+</script>
+{% endblock %}
